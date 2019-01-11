@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.nrec.demo.MainActivity">
+
+    <!--<com.nrec.commonwidget.HeaderBar-->
+        <!--app:titleText="主界面"-->
+        <!--app:rightText="开始"-->
+        <!--app:leftImgColor="#000"-->
+        <!--app:barBackGroundColor="#fff"-->
+        <!--app:centerTextColor="#000"-->
+        <!--app:rightTextColor="#000"-->
+        <!--android:id="@+id/titleBar"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"></com.nrec.commonwidget.HeaderBar>-->
+    
+    <com.hjq.bar.TitleBar
+        android:id="@+id/titleBar"
+        app:rightIcon="@drawable/icon_fail_indictor"
+        app:title="默认标题栏"
+        app:titleSize="20sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></com.hjq.bar.TitleBar>
+
+    <Button
+        android:id="@+id/doubleClick"
+        android:text="防止多次点击"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/signalStrengthTextView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </ScrollView>
+
+
+</LinearLayout>
