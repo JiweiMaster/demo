@@ -10,6 +10,7 @@ import java.util.ArrayList;
 /**
  * 监听Activity的生命周期
  * 在MyApplication中调用
+ * destoryAllActivity => 可以删除所有的Activity
  * registerActivityLifecycleCallbacks(activityLifeCyclerListener);
  * activityLifeCyclerListener.setOnActivityListener...回调监听的接口函数
  * Created by 18099 on 2019/1/10.

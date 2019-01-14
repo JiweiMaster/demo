@@ -12,6 +12,8 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.ImageView;
 
+import net.lingala.zip4j.core.ZipFile;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -52,6 +54,9 @@ public class WebContainerActivity extends AppCompatActivity {
         initWebView(contentWebView);
     }
 
+
+
+
     private void initData() {
         //服务器获取数据
         DownloadApi downloadApi = DownloadRetrofitFactory.getInstance()
@@ -63,15 +68,45 @@ public class WebContainerActivity extends AppCompatActivity {
                 if(response.isSuccessful()){
                     //文件写入磁盘
                     writeResponseBodyToDisk(response.body());
-                    Log.e(TAG,"文件下载成功");
                 }
             }
-
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Log.e("",t.getMessage());
             }
         });
+        //初始化文件下载监听器
+        mOnFileDownloadCompleteListener = new OnFileDownloadCompleteListener() {
+            @Override
+            public void onFileDownloadComplete(String filePath) {
+                Log.e(TAG,"文件下载成功=>"+filePath);
+//                String url = "file://"+filePath;
+                String destFile = unZip(filePath);
+                if(!destFile.equals("")){
+                    contentWebView.loadUrl("file://"+destFile+"/index.html");
+                }
+
+//                Log.e(TAG,""+url);
+            }
+
+            @Override
+            public void onFileDownloadFailed() {
+                Log.e(TAG,"文件下载失败");
+            }
+        };
+    }
+    //解压文件
+    private String unZip(String sourFile) {
+        try{
+            String destFile = getCacheDir().getAbsolutePath();
+            Log.e(TAG,""+destFile);
+            ZipFile zipFile =  new ZipFile(sourFile);
+            zipFile.extractAll(destFile);
+            return destFile;
+        }catch(Exception e){
+            Log.e(TAG,"文件解压失败=>"+e.toString());
+            return  null;
+        }
     }
 
     private void initWebView(WebView webView) {
@@ -105,15 +140,30 @@ public class WebContainerActivity extends AppCompatActivity {
         webView.setLayerType(View.LAYER_TYPE_NONE, null);
 
     }
+    //文件下载监听器
+    OnFileDownloadCompleteListener mOnFileDownloadCompleteListener;
+    public interface OnFileDownloadCompleteListener{
+        void onFileDownloadComplete(String filePath);
+        void onFileDownloadFailed();
+    }
+
+    public void setOnFileDownloadCompleteListener(OnFileDownloadCompleteListener onFileDownloadCompleteListener){
+        this.mOnFileDownloadCompleteListener = onFileDownloadCompleteListener;
+    }
+
 
     private boolean writeResponseBodyToDisk(ResponseBody body) {
         try {
-            File downloadFile = this.getCacheDir();
+            File dir = this.getCacheDir();
+            //使用包名作为文件的命名
+            File downloadFile = new File(dir.getAbsolutePath() +"/index.zip");
+            if(downloadFile.exists()){
+                downloadFile.delete();
+            }
             InputStream inputStream = null;
             OutputStream outputStream = null;
             try {
                 byte[] fileReader = new byte[4096];
-                long fileSize = body.contentLength();
                 inputStream = body.byteStream();
                 outputStream = new FileOutputStream(downloadFile);
                 while (true) {
@@ -124,8 +174,13 @@ public class WebContainerActivity extends AppCompatActivity {
                     outputStream.write(fileReader, 0, read);
                 }
                 outputStream.flush();
+                if(mOnFileDownloadCompleteListener != null){
+                    mOnFileDownloadCompleteListener.onFileDownloadComplete(downloadFile.getAbsolutePath());
+                }
                 return true;
             } catch (IOException e) {
+                Log.e(TAG,""+e.toString());
+                mOnFileDownloadCompleteListener.onFileDownloadFailed();
                 return false;
             } finally {
                 if (inputStream != null) {
@@ -137,6 +192,8 @@ public class WebContainerActivity extends AppCompatActivity {
                 }
             }
         } catch (IOException e) {
+            mOnFileDownloadCompleteListener.onFileDownloadFailed();
+            Log.e(TAG,""+e.toString());
             return false;
         }
     }
