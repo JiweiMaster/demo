@@ -4,6 +4,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 
 /**
  * Created by 18099 on 2019/1/14.
@@ -28,7 +29,7 @@ public class NotificationUtil {
 
     public static class Builder{
         private Context mContext;
-        private String notificationId = "default_notification";
+        private String notificationIdStr = "default_notification";
         private String notificationName = "default_name";
         private String notificationDescription = "default_description";
         private boolean isVibrated = false;
@@ -37,9 +38,11 @@ public class NotificationUtil {
         private String notificationTitle = "default_title";
         private String notificationText = "default_text";
 
+        private boolean isAutoCancel = true;
+
         //设置相关的属性
-        public Builder setNotificationId(String notificationId) {
-            this.notificationId = notificationId;
+        public Builder setNotificationIdStr(String notificationIdStr) {
+            this.notificationIdStr = notificationIdStr;
             return this;
         }
 
@@ -84,16 +87,22 @@ public class NotificationUtil {
                     context.getSystemService(Context.NOTIFICATION_SERVICE);
         }
 
+        public Builder setAutoCancel(boolean autoCancel) {
+            isAutoCancel = autoCancel;
+            return this;
+        }
+
+
         /**
          * 使用建造者模式，可以动态设置Builder的属性
          * @return
          */
         public NotificationUtil build(){
             //设置channel
-            NotificationChannel mChannel;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 //用于Android8.0的系统，Android8.0一下的系统使用其他方法进行操作
-                mChannel = new NotificationChannel(notificationId, notificationName, NotificationManager.IMPORTANCE_HIGH);
+                NotificationChannel mChannel;
+                mChannel = new NotificationChannel(notificationIdStr, notificationName, NotificationManager.IMPORTANCE_HIGH);
                 mChannel.setDescription(notificationDescription);
                 mChannel.enableVibration(isVibrated);
                 mChannel.enableLights(isLighted);
@@ -107,16 +116,18 @@ public class NotificationUtil {
                         .setSmallIcon(notificationImage)
                         .setLargeIcon(BitmapFactory.decodeResource(mContext.getResources(),
                                 R.drawable.icon_notification))
-                        .setAutoCancel(false)
+                        .setAutoCancel(isAutoCancel)
                         .setOnlyAlertOnce(true)
-                        .setChannelId(notificationId);
+                        .setChannelId(notificationIdStr);
             }else{
                 //8.0以下版本手机的notification的开启的办法
                 mBuilder =new Notification.Builder(mContext)
                         .setContentTitle(notificationTitle)
                         .setContentText(notificationText)
                         .setSmallIcon(notificationImage)
-                        .setAutoCancel(false)
+                        .setLargeIcon(BitmapFactory.decodeResource(mContext.getResources(),
+                                R.drawable.icon_notification))
+                        .setAutoCancel(isAutoCancel)
                         .setOnlyAlertOnce(true);
             }
             return new NotificationUtil();
@@ -127,13 +138,8 @@ public class NotificationUtil {
      * 继承初始化的通知
      */
     public void show(){
-        //notification确定了显示的id
-        if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
-            if(mNotificationManager != null){
-                //设置一个该应用里面独一无二的id
-                mNotificationManager.notify(notificationId,mBuilder.build());
-            }
-        }else{
+        if(mNotificationManager != null){
+            //设置一个该应用里面独一无二的id
             mNotificationManager.notify(notificationId,mBuilder.build());
         }
     }
@@ -145,16 +151,18 @@ public class NotificationUtil {
     public void show(int newNotificationId){
         //显示新的通知通知
         //notification确定了显示的id
-        if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
-            if(mNotificationManager != null){
-                //设置一个该应用里面独一无二的id
-                mNotificationManager.notify(newNotificationId,mBuilder.build());
-            }
-        }else{
-            if(mNotificationManager != null){
-                mNotificationManager.notify(newNotificationId,mBuilder.build());
-            }
+        if(mNotificationManager != null){
+            //设置一个该应用里面独一无二的id
+            mNotificationManager.notify(newNotificationId,mBuilder.build());
         }
+    }
+
+    public void cancelByNotificationId(int notificationId){
+        mNotificationManager.cancel(notificationId);
+    }
+
+    public void cancelAll() {
+        mNotificationManager.cancelAll();
     }
 
 }
